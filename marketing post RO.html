@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cercul Povestii Emotionale de Marketing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #title-section {
+            margin-bottom: 20px;
+        }
+
+        #buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .chapter-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .chapter-button:hover {
+            background-color: #45a049;
+        }
+
+        #editor {
+            display: none;
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px; /* Inaltime tripla */
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #final-story {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+            display: none;
+            text-align: left;
+        }
+
+        #description {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        #image-upload {
+            margin: 10px 0;
+        }
+
+        .comment-section {
+            background-color: #ffffe0; /* Galben pal */
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Cercul Povestii Emotionale de Marketing</h1>
+    <div id="title-section">
+        <input type="text" id="story-title" placeholder="Titlul Textului de Marketing" style="width: 50%; padding: 10px; margin-bottom: 10px;">
+        <textarea id="story-description" placeholder="Scurta Descriere a Produsului/Serviciului" style="width: 50%; height: 100px; padding: 10px; margin-bottom: 10px;"></textarea>
+    </div>
+
+    <div id="buttons-container">
+        <button class="chapter-button" onclick="openEditor(1)">1. Titlu atragator</button>
+        <button class="chapter-button" onclick="openEditor(2)">2. Deschidere puternica</button>
+        <button class="chapter-button" onclick="openEditor(3)">3. Puncte de durere</button>
+        <button class="chapter-button" onclick="openEditor(4)">4. Beneficii principale</button>
+        <button class="chapter-button" onclick="openEditor(5)">5. Povestea unui client</button>
+        <button class="chapter-button" onclick="openEditor(6)">6. Dovezi sociale</button>
+        <button class="chapter-button" onclick="openEditor(7)">7. Urgentarea actiunii</button>
+        <button class="chapter-button" onclick="openEditor(8)">8. Concluzie emotionala</button>
+    </div>
+
+    <div id="editor">
+        <h2>Editeaza Sectiunea (Capitolul <span id="chapter-number"></span>)</h2>
+        <textarea id="story-text" placeholder="Scrie aici..." oninput="saveCurrentChapter()"></textarea>
+        <input type="file" id="image-upload" accept="image/*" onchange="previewImage(event)">
+        <img id="image-preview" style="display:none; max-width: 100%; margin-top: 10px;" alt="Preview imagine">
+        <div id="description"></div>
+        
+        <div class="comment-section">
+            <h3>Comentarii</h3>
+            <textarea id="comment-text" placeholder="Adauga comentarii..." style="width: 100%; height: 100px;"></textarea>
+        </div>
+        
+        <button onclick="saveCurrentChapter()">Salveaza Sectiunea</button>
+        <button onclick="generateStory()">Genereaza Textul Final</button>
+        <button onclick="exportStory()">Exporta Textul</button> <!-- Buton pentru export -->
+    </div>
+
+    <div id="final-story">
+        <h2>Textul Final de Marketing</h2>
+        <div id="story-output"></div>
+    </div>
+
+    <script>
+        const stories = {};
+        const images = {};
+        const comments = {}; // Obiect pentru a stoca comentariile
+        const descriptions = {
+            1: "Titlu atragator: Creeaza un titlu care sa atraga atentia si sa promita o solutie la o problema.",
+            2: "Deschidere puternica: Captiveaza interesul cititorului introducand povestea intr-un mod relevant pentru el.",
+            3: "Puncte de durere: Identifica problemele majore pe care le are publicul tau si arata ca le intelegi.",
+            4: "Beneficii principale: Explica ce ofera produsul/serviciul tau si cum va rezolva problema clientului.",
+            5: "Povestea unui client: Foloseste storytelling pentru a ilustra cum a ajutat produsul tau un client.",
+            6: "Dovezi sociale: Include recenzii, testimoniale si dovezi de la alti clienti care au avut rezultate.",
+            7: "Urgentarea actiunii: Indeamna cititorul sa actioneze acum, folosind oferte limitate sau termeni urgenti.",
+            8: "Concluzie emotionala: Incheie povestea cu un apel la emotii, lasand cititorul sa se simta inspirat si hotarat."
+        };
+
+        let currentChapter = 1; // Capitolul curent
+
+        function openEditor(chapter) {
+            // Salveaza capitolul curent inainte de a deschide un altul
+            saveCurrentChapter();
+
+            currentChapter = chapter; // Seteaza capitolul curent
+            document.getElementById('editor').style.display = 'block';
+            document.getElementById('chapter-number').innerText = chapter;
+            document.getElementById('story-text').value = stories[chapter] || '';
+            document.getElementById('image-preview').style.display = 'none'; // Reset preview
+            document.getElementById('description').innerText = descriptions[chapter];
+            document.getElementById('image-upload').value = ''; // Reset file input
+
+            // Afiseaza imaginea daca exista
+            if (images[chapter]) {
+                document.getElementById('image-preview').src = images[chapter];
+                document.getElementById('image-preview').style.display = 'block';
+            }
+
+            // Afiseaza comentariul daca exista
+            document.getElementById('comment-text').value = comments[chapter] || '';
+        }
+
+        function saveCurrentChapter() {
+            const text = document.getElementById('story-text').value;
+            stories[currentChapter] = text;
+
+            const image = document.getElementById('image-upload').files[0];
+            if (image) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    images[currentChapter] = e.target.result; // Salveaza imaginea
+                }
+                reader.readAsDataURL(image);
+            }
+
+            // Salveaza comentariul
+            comments[currentChapter] = document.getElementById('comment-text').value;
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result; // Seteaza preview
+                document.getElementById('image-preview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function generateStory() {
+            let finalStory = document.getElementById('story-title').value + '\n\n'; // Adauga titlul
+            finalStory += document.getElementById('story-description').value + '\n\n';
+
+            for (let i = 1; i <= 8; i++) {
+                finalStory += `${stories[i] || ''}\n\n`;
+            }
+
+            document.getElementById('story-output').innerText = finalStory;
+            document.getElementById('final-story').style.display = 'block'; // Arata textul final
+        }
+
+        function exportStory() {
+            let finalStory = '';
+
+            for (let i = 1; i <= 8; i++) {
+                finalStory += `${stories[i] || ''}\n\n`;
+            }
+
+            // Creare fisier text
+            const blob = new Blob([finalStory], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'text-marketing.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Eliberare URL
+        }
+    </script>
+
+</body>
+</html>
