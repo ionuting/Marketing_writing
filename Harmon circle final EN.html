@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Circle of Dan Harmon's Story</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #title-section {
+            margin-bottom: 20px;
+        }
+
+        #buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .chapter-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .chapter-button:hover {
+            background-color: #45a049;
+        }
+
+        #editor {
+            display: none;
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px; /* Triple height */
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        #final-story {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+            display: none;
+            text-align: left;
+        }
+
+        #description {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        #image-upload {
+            margin: 10px 0;
+        }
+
+        .comment-section {
+            background-color: #ffffe0; /* Light yellow */
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>The Circle of Dan Harmon's Story</h1>
+    <div id="title-section">
+        <input type="text" id="story-title" placeholder="Story Title" style="width: 50%; padding: 10px; margin-bottom: 10px;">
+        <textarea id="story-description" placeholder="Short Description" style="width: 50%; height: 100px; padding: 10px; margin-bottom: 10px;"></textarea>
+    </div>
+
+    <div id="buttons-container">
+        <button class="chapter-button" onclick="openEditor(1)">1. In A Zone of Comfort</button>
+        <button class="chapter-button" onclick="openEditor(2)">2. They Desire Something</button>
+        <button class="chapter-button" onclick="openEditor(3)">3. Enter An Unfamiliar Situation</button>
+        <button class="chapter-button" onclick="openEditor(4)">4. Adapt to The Situation</button>
+        <button class="chapter-button" onclick="openEditor(5)">5. Get What They Desired</button>
+        <button class="chapter-button" onclick="openEditor(6)">6. Pay a Heavy Price for Winning</button>
+        <button class="chapter-button" onclick="openEditor(7)">7. A Return to Their Familiar Situation</button>
+        <button class="chapter-button" onclick="openEditor(8)">8. They Have Overall Changed</button>
+    </div>
+
+    <div id="editor">
+        <h2>Edit Story (Chapter <span id="chapter-number"></span>)</h2>
+        <textarea id="story-text" placeholder="Write here..." oninput="saveCurrentChapter()"></textarea>
+        <input type="file" id="image-upload" accept="image/*" onchange="previewImage(event)">
+        <img id="image-preview" style="display:none; max-width: 100%; margin-top: 10px;" alt="Image preview">
+        <div id="description"></div>
+        
+        <div class="comment-section">
+            <h3>Comments</h3>
+            <textarea id="comment-text" placeholder="Add comments..." style="width: 100%; height: 100px;"></textarea>
+        </div>
+        
+        <button onclick="saveCurrentChapter()">Save Chapter</button>
+        <button onclick="generateStory()">Generate Final Story</button>
+        <button onclick="exportStory()">Export Story</button> <!-- Button for export -->
+    </div>
+
+    <div id="final-story">
+        <h2>Final Story</h2>
+        <div id="story-output"></div>
+    </div>
+
+    <script>
+        const stories = {};
+        const images = {};
+        const comments = {}; // Object to store comments
+        const descriptions = {
+            1: "In A Zone of Comfort: Introducing the character and their world. What is normal for them.",
+            2: "They Desire Something: The character realizes what they truly want.",
+            3: "Enter An Unfamiliar Situation: The character faces a new situation that tests their limits.",
+            4: "Adapt to The Situation: The character learns to adapt to the new reality.",
+            5: "Get What They Desired: The character gets what they wanted, but not in the way they expected.",
+            6: "Pay a Heavy Price for Winning: There is a high cost for what they have obtained.",
+            7: "A Return to Their Familiar Situation: The character returns home, but nothing is the same.",
+            8: "They Have Overall Changed: The evolution of the character and how they have been transformed by their experiences."
+        };
+
+        let currentChapter = 1; // Current chapter
+
+        function openEditor(chapter) {
+            // Save the current chapter before opening another
+            saveCurrentChapter();
+
+            currentChapter = chapter; // Set the current chapter
+            document.getElementById('editor').style.display = 'block';
+            document.getElementById('chapter-number').innerText = chapter;
+            document.getElementById('story-text').value = stories[chapter] || '';
+            document.getElementById('image-preview').style.display = 'none'; // Reset preview
+            document.getElementById('description').innerText = descriptions[chapter];
+            document.getElementById('image-upload').value = ''; // Reset file input
+
+            // Show the image if it exists
+            if (images[chapter]) {
+                document.getElementById('image-preview').src = images[chapter];
+                document.getElementById('image-preview').style.display = 'block';
+            }
+
+            // Show the comment if it exists
+            document.getElementById('comment-text').value = comments[chapter] || '';
+        }
+
+        function saveCurrentChapter() {
+            const text = document.getElementById('story-text').value;
+            stories[currentChapter] = text;
+
+            const image = document.getElementById('image-upload').files[0];
+            if (image) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    images[currentChapter] = e.target.result; // Save image data
+                }
+                reader.readAsDataURL(image);
+            }
+
+            // Save the comment
+            comments[currentChapter] = document.getElementById('comment-text').value;
+        }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('image-preview').src = e.target.result; // Set preview
+                document.getElementById('image-preview').style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function generateStory() {
+            let finalStory = document.getElementById('story-title').value + '\n\n'; // Add title
+            finalStory += document.getElementById('story-description').value + '\n\n';
+
+            for (let i = 1; i <= 8; i++) {
+                finalStory += `${stories[i] || ''}\n\n`;
+            }
+
+            document.getElementById('story-output').innerText = finalStory;
+            document.getElementById('final-story').style.display = 'block'; // Show final story
+        }
+
+        function exportStory() {
+            let finalStory = '';
+
+            for (let i = 1; i <= 8; i++) {
+                finalStory += `${stories[i] || ''}\n\n`;
+            }
+
+            // Create text file
+            const blob = new Blob([finalStory], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'story.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Release URL
+        }
+    </script>
+
+</body>
+</html>
