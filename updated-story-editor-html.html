@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Avansat de Capitole pentru Poveste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #story-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            width: 80%;
+            padding: 10px;
+        }
+        #buttons-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+        .chapter-button {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            color: #333;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .chapter-button .description {
+            font-size: 10px;
+            margin-top: 5px;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .editor, .preview {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .editor textarea, .editor input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .editor textarea {
+            height: calc(100% - 150px);
+        }
+        .editor button, #save-story, #preview-story {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #save-story, #preview-story {
+            position: fixed;
+            bottom: 20px;
+        }
+        #save-story {
+            right: 20px;
+        }
+        #preview-story {
+            right: 180px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="story-title" placeholder="Titlul poveștii">
+    <div id="buttons-container"></div>
+    <div id="editor" class="editor">
+        <h2 id="editor-title">Editor Capitol</h2>
+        <input type="text" id="editor-description" placeholder="Descriere scurtă">
+        <textarea id="editor-content"></textarea>
+        <button onclick="saveChapter()">Salvează</button>
+        <button class="close-btn" onclick="closeEditor()">×</button>
+    </div>
+    <div id="preview" class="preview">
+        <h2>Previzualizare Poveste</h2>
+        <div id="preview-content"></div>
+        <button class="close-btn" onclick="closePreview()">×</button>
+    </div>
+    <button id="preview-story" onclick="previewStory()">Previzualizare Poveste</button>
+    <button id="save-story" onclick="saveStory()">Salvează Povestea</button>
+
+    <script>
+        let chapters = [
+            { id: 1, title: "Capitolul 1", content: "", description: "Descriere 1", color: "#FFC3A0" },
+            { id: 2, title: "Capitolul 2", content: "", description: "Descriere 2", color: "#FFAFCC" },
+            { id: 3, title: "Capitolul 3", content: "", description: "Descriere 3", color: "#BDE0FE" },
+            { id: 4, title: "Capitolul 4", content: "", description: "Descriere 4", color: "#A0C4FF" },
+            { id: 5, title: "Capitolul 5", content: "", description: "Descriere 5", color: "#9BF6FF" },
+            { id: 6, title: "Capitolul 6", content: "", description: "Descriere 6", color: "#CAFFBF" },
+            { id: 7, title: "Capitolul 7", content: "", description: "Descriere 7", color: "#FDFFB6" },
+            { id: 8, title: "Capitolul 8", content: "", description: "Descriere 8", color: "#FFD6A5" },
+            { id: 9, title: "Capitolul 9", content: "", description: "Descriere 9", color: "#FFC6FF" },
+            { id: 10, title: "Capitolul 10", content: "", description: "Descriere 10", color: "#E7C6FF" }
+        ];
+
+        function createButtons() {
+            const container = document.getElementById('buttons-container');
+            const centerX = 250;
+            const centerY = 250;
+            const radius = 200;
+
+            chapters.forEach((chapter, index) => {
+                const button = document.createElement('button');
+                button.className = 'chapter-button';
+                button.innerHTML = `
+                    ${index + 1}
+                    <div class="description" contenteditable="true">${chapter.description}</div>
+                `;
+                const angle = (index / chapters.length) * 2 * Math.PI - Math.PI/2;
+                const x = centerX + radius * Math.cos(angle) - 40;
+                const y = centerY + radius * Math.sin(angle) - 40;
+                
+                button.style.left = `${x}px`;
+                button.style.top = `${y}px`;
+                button.style.backgroundColor = chapter.color;
+                button.onclick = (e) => {
+                    if (e.target === button) {
+                        openEditor(index + 1);
+                    }
+                };
+                container.appendChild(button);
+            });
+        }
+
+        function openEditor(chapterId) {
+            const chapter = chapters[chapterId - 1];
+            document.getElementById('editor-title').textContent = chapter.title;
+            document.getElementById('editor-description').value = chapter.description;
+            document.getElementById('editor-content').value = chapter.content;
+            document.getElementById('editor').style.display = 'block';
+            document.getElementById('editor-content').dataset.chapterId = chapterId;
+        }
+
+        function saveChapter() {
+            const content = document.getElementById('editor-content').value;
+            const description = document.getElementById('editor-description').value;
+            const chapterId = parseInt(document.getElementById('editor-content').dataset.chapterId);
+            const chapter = chapters[chapterId - 1];
+            chapter.content = content;
+            chapter.description = description;
+            document.querySelector(`.chapter-button:nth-child(${chapterId}) .description`).textContent = description;
+            alert('Capitolul a fost salvat!');
+            closeEditor();
+        }
+
+        function closeEditor() {
+            document.getElementById('editor').style.display = 'none';
+        }
+
+        function previewStory() {
+            let preview = `<h1>${document.getElementById('story-title').value || 'Titlu Lipsă'}</h1>`;
+            chapters.forEach((chapter, index) => {
+                preview += `<h3>Capitolul ${index + 1}: ${chapter.title}</h3>`;
+                preview += `<p>${chapter.content}</p>`;
+            });
+            document.getElementById('preview-content').innerHTML = preview;
+            document.getElementById('preview').style.display = 'block';
+        }
+
+        function closePreview() {
+            document.getElementById('preview').style.display = 'none';
+        }
+
+        function saveStory() {
+            let story = `${document.getElementById('story-title').value || 'Titlu Lipsă'}\n\n`;
+            chapters.forEach((chapter, index) => {
+                story += `Capitolul ${index + 1}: ${chapter.title}\n\n`;
+                story += `${chapter.content}\n\n`;
+            });
+            
+            const blob = new Blob([story], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "poveste.txt";
+            link.click();
+        }
+
+        createButtons();
+
+        // Salvează descrierile editate direct pe butoane
+        document.addEventListener('focusout', function(e) {
+            if (e.target.classList.contains('description')) {
+                const button = e.target.closest('.chapter-button');
+                const chapterId = Array.from(button.parentNode.children).indexOf(button);
+                chapters[chapterId].description = e.target.textContent;
+            }
+        });
+    </script>
+</body>
+</html>
