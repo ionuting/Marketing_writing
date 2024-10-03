@@ -10,11 +10,12 @@
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
+            display: flex;
         }
 
         #mindmap-container {
             padding: 20px;
-            text-align: center;
+            flex-grow: 1;
         }
 
         #title-input {
@@ -29,24 +30,24 @@
             padding: 10px;
             font-size: 16px;
             margin-bottom: 20px;
-            height: 60px; /* În?l?imea câmpului de descriere */
+            height: 60px;
         }
 
         #mindmap {
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 1200px;
             background-color: #fff;
             border: 1px solid #ccc;
             margin-top: 20px;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .node {
             position: absolute;
-            padding: 30px; /* Dimensiunea butoanelor este m?rit? */
-            width: 200px; /* L??imea butoanelor este m?rit? */
-            height: 150px; /* În?l?imea butoanelor este m?rit? */
+            padding: 10px;
+            width: 330px; /* 50% wider */
+            height: 150px;
             border-radius: 10px;
             border: 1px solid #ccc;
             cursor: move;
@@ -54,19 +55,27 @@
             font-weight: bold;
             text-align: center;
             line-height: 1.5;
+            background-color: rgba(255, 255, 255, 0.8); /* Default pale background */
         }
 
-        /* Stiluri pentru culorile sticky notes, palide */
-        .node-1 { background-color: rgba(255, 235, 59, 0.6); } /* Galben pal */
-        .node-2 { background-color: rgba(255, 87, 34, 0.6); } /* Portocaliu pal */
-        .node-3 { background-color: rgba(76, 175, 80, 0.6); } /* Verde pal */
-        .node-4 { background-color: rgba(33, 150, 243, 0.6); } /* Albastru pal */
-        .node-5 { background-color: rgba(156, 39, 176, 0.6); } /* Violet pal */
-        .node-6 { background-color: rgba(255, 193, 7, 0.6); } /* Galben deschis pal */
-        .node-7 { background-color: rgba(63, 81, 181, 0.6); } /* Albastru închis pal */
-        .node-8 { background-color: rgba(0, 150, 136, 0.6); } /* Turcoaz pal */
+        /* Pale colors for the nodes */
+        .node-1 { background-color: rgba(255, 235, 59, 0.3); }
+        .node-2 { background-color: rgba(255, 87, 34, 0.3); }
+        .node-3 { background-color: rgba(76, 175, 80, 0.3); }
+        .node-4 { background-color: rgba(33, 150, 243, 0.3); }
+        .node-5 { background-color: rgba(156, 39, 176, 0.3); }
+        .node-6 { background-color: rgba(255, 193, 7, 0.3); }
+        .node-7 { background-color: rgba(63, 81, 181, 0.3); }
+        .node-8 { background-color: rgba(0, 150, 136, 0.3); }
+        .node-9 { background-color: rgba(255, 152, 0, 0.3); }
+        .node-10 { background-color: rgba(139, 195, 74, 0.3); }
+        .node-11 { background-color: rgba(33, 150, 243, 0.3); }
+        .node-12 { background-color: rgba(255, 64, 129, 0.3); }
+        .node-13 { background-color: rgba(0, 188, 212, 0.3); }
+        .node-14 { background-color: rgba(156, 39, 176, 0.3); }
+        .node-15 { background-color: rgba(233, 30, 99, 0.3); }
 
-        #clear-btn, #export-btn {
+        #clear-btn, #export-btn, #load-btn {
             padding: 10px 15px;
             margin: 5px;
             background-color: #007bff;
@@ -76,7 +85,82 @@
             border-radius: 5px;
         }
 
-        #clear-btn:hover, #export-btn:hover {
+        #clear-btn:hover, #export-btn:hover, #load-btn:hover {
+            background-color: #0056b3;
+        }
+
+        #legend {
+            width: 250px;
+            padding: 20px;
+            background-color: #e0e0e0;
+            border-left: 2px solid #ccc;
+            position: relative;
+            overflow-y: auto;
+            height: 100vh;
+        }
+
+        #legend h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .legend-item {
+            margin-bottom: 20px;
+        }
+
+        .legend-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .legend-description {
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* Modal for larger text editor */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            position: absolute;
+            background-color: #fff;
+            padding: 20px;
+            width: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal textarea {
+            width: 100%;
+            height: 300px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .modal button {
+            padding: 10px 15px;
+            margin-right: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .modal button:hover {
             background-color: #0056b3;
         }
     </style>
@@ -84,14 +168,30 @@
 <body>
 
     <div id="mindmap-container">
-        <h2>Cercul Povestii lui Dan Harmon</h2>
-        <input type="text" id="title-input" placeholder="Introduceti titlul" />
-        <textarea id="description-input" placeholder="Introduceti descriere ironica"></textarea>
+        <h2>Save the Cat Story Structure</h2>
+        <input type="text" id="title-input" placeholder="Enter title" />
+        <textarea id="description-input" placeholder="Enter ironic description"></textarea>
         <br>
         <button id="clear-btn">Clear Mindmap</button>
         <button id="export-btn">Export to Text</button>
+        <button id="load-btn">Load from Text File</button>
+        <input type="file" id="file-input" accept=".txt" style="display:none">
         <div id="mindmap">
-            <!-- Nodurile sticky notes vor fi ad?ugate aici -->
+            <!-- Sticky note nodes will be added here -->
+        </div>
+    </div>
+
+    <div id="legend">
+        <h3>Chapter Descriptions</h3>
+        <!-- Legend items will be added here dynamically -->
+    </div>
+
+    <!-- Modal for larger text editor -->
+    <div id="text-editor-modal" class="modal">
+        <div class="modal-content">
+            <textarea id="modal-textarea"></textarea>
+            <button id="save-btn">Save</button>
+            <button id="close-btn">Close</button>
         </div>
     </div>
 
@@ -100,51 +200,94 @@
             const mindmap = document.getElementById('mindmap');
             const clearBtn = document.getElementById('clear-btn');
             const exportBtn = document.getElementById('export-btn');
+            const loadBtn = document.getElementById('load-btn');
+            const fileInput = document.getElementById('file-input');
+            const legend = document.getElementById('legend');
+            const modal = document.getElementById('text-editor-modal');
+            const modalTextarea = document.getElementById('modal-textarea');
+            const saveBtn = document.getElementById('save-btn');
+            const closeBtn = document.getElementById('close-btn');
+
+            let currentNode = null; // Track which node is being edited
+
             const chapters = [
-                "1. Comfort Zone",
-                "2. The Desire",
-                "3. Enter into unfamiliar",
-                "4. The Struggle and Adaptation",
-                "5. Attaining the desired object",
-                "6. The heavy price to pay",
-                "7. The Return to familiar",
-                "8. The Change"
+                { title: "1. Opening Image", description: "This is the first impression of what kind of story the audience is about to see. It's a snapshot of the main character's problem before the adventure begins. (1% of the script)" },
+                { title: "2. Theme Stated", description: "The theme of the story is subtly suggested, often in a conversation. (5%)" },
+                { title: "3. Set-Up", description: "This section provides more information about the hero's life as it currently is and what's missing from it. (1-10%)" },
+                { title: "4. Catalyst", description: "A problem disrupts the hero's life, also known as the “call to adventure”. (10%)" },
+                { title: "5. Debate", description: "The hero doubts the journey they must undertake. It's a last chance for the hero to say “No”. (10-20%)" },
+                { title: "6. Break into Two", description: "The hero makes the decision and enters a new world or way of life. (20%)" },
+                { title: "7. B Story", description: "A secondary story begins, often involving a love interest or a sidekick, that will weave in and out of the main story. (22%)" },
+                { title: "8. Fun and Games", description: "This is often where most of the trailer moments are found. The hero explores the new world and the audience is entertained. (20-50%)" },
+                { title: "9. Midpoint", description: "A moment of either success or failure that changes the hero's journey in a meaningful way. (50%)" },
+                { title: "10. Bad Guys Close In", description: "If the midpoint was a high, things get bad here. If the midpoint was a low, things start to look up. (50-75%)" },
+                { title: "11. All is Lost", description: "The lowest point for the hero. The journey seems impossible to complete, and the hero feels defeated. (75%)" },
+                { title: "12. Dark Night of the Soul", description: "The hero hits rock bottom, wallowing in hopelessness. The hero learns the theme stated back at the beginning. (75-80%)" },
+                { title: "13. Break into Three", description: "The hero finds inspiration, often from the B Story, and decides it's time to fight. (80%)" },
+                { title: "14. Finale", description: "The hero confronts the antagonist or whatever stands in their way. The lessons learned in Act Two are put into action. (80-99%)" },
+                { title: "15. Final Image", description: "A reflection of the opening image, showing how the hero's world and character have changed. (99-100%)" }
             ];
 
             const colors = [
                 'node-1', 'node-2', 'node-3', 
                 'node-4', 'node-5', 'node-6', 
-                'node-7', 'node-8'
+                'node-7', 'node-8', 'node-9', 
+                'node-10', 'node-11', 'node-12', 
+                'node-13', 'node-14', 'node-15'
             ];
 
-            // Adaug? noduri sticky notes
-            chapters.forEach((title, index) => {
-                const node = document.createElement('div');
-                node.className = `node ${colors[index]}`;
-                node.style.top = `${Math.floor(index / 4) * 180 + 20}px`; // A?ezare pe dou? rânduri
-                node.style.left = `${(index % 4) * 220 + 20}px`; // A?ezare pe dou? rânduri
-                node.contentEditable = true;
-                node.innerText = title;
-                mindmap.appendChild(node);
-                makeNodeDraggable(node);
-            });
+            function createNodesFromChapters() {
+                chapters.forEach((chapter, index) => {
+                    const node = document.createElement('div');
+                    node.className = `node ${colors[index]}`;
+                    node.contentEditable = true;
+                    node.style.top = `${(Math.floor(index / 4) * 180) + 10}px`;
+                    node.style.left = `${(index % 4) * 380 + 20}px`; // Adjusted for 50% width increase
+                    node.innerText = chapter.title;
 
-            // Cur??? mindmap-ul
+                    mindmap.appendChild(node);
+                    makeNodeDraggable(node);
+
+                    // Add description to the legend
+                    const legendItem = document.createElement('div');
+                    legendItem.className = 'legend-item';
+                    const legendTitle = document.createElement('div');
+                    legendTitle.className = 'legend-title';
+                    legendTitle.innerText = chapter.title;
+                    const legendDescription = document.createElement('div');
+                    legendDescription.innerText = chapter.description;
+
+                    legendItem.appendChild(legendTitle);
+                    legendItem.appendChild(legendDescription);
+                    legend.appendChild(legendItem);
+
+                    // Double-click event to open modal editor
+                    node.addEventListener('dblclick', () => {
+                        currentNode = node;
+                        modalTextarea.value = node.innerText; // Load node text into the modal
+                        modal.style.display = 'block'; // Show the modal
+                    });
+                });
+            }
+
+            createNodesFromChapters();
+
+            // Clear the mindmap
             clearBtn.addEventListener('click', () => {
                 mindmap.innerHTML = '';
             });
 
-            // Export? con?inutul nodurilor într-un fi?ier text
+            // Export content of nodes to a text file
             exportBtn.addEventListener('click', () => {
                 let textContent = '';
                 const nodes = document.querySelectorAll('.node');
                 nodes.forEach(node => {
                     textContent += `***\n${node.innerText}\n\n`;
                 });
-                downloadTextFile(textContent, 'Capitole_Cercul_Povestii.txt');
+                downloadTextFile(textContent, 'Chapters_Story_Structure.txt');
             });
 
-            // Func?ie pentru a desc?rca un fi?ier text
+            // Function to download a text file
             function downloadTextFile(text, filename) {
                 const blob = new Blob([text], { type: 'text/plain' });
                 const link = document.createElement('a');
@@ -153,7 +296,48 @@
                 link.click();
             }
 
-            // Func?ie pentru a face nodurile draggable
+            // Load content from a text file
+            loadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const content = event.target.result;
+                        loadContentFromText(content);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            function loadContentFromText(text) {
+                const chaptersArray = text.split('***').filter(ch => ch.trim());
+                mindmap.innerHTML = '';
+
+                chaptersArray.forEach((chapterContent, index) => {
+                    const node = document.createElement('div');
+                    node.className = `node ${colors[index]}`;
+                    node.contentEditable = true;
+                    node.style.top = `${(Math.floor(index / 4) * 180) + 10}px`;
+                    node.style.left = `${(index % 4) * 380 + 20}px`; // Adjusted for 50% width increase
+                    node.innerText = chapterContent.trim();
+
+                    mindmap.appendChild(node);
+                    makeNodeDraggable(node);
+
+                    // Double-click event for opening modal
+                    node.addEventListener('dblclick', () => {
+                        currentNode = node;
+                        modalTextarea.value = node.innerText;
+                        modal.style.display = 'block';
+                    });
+                });
+            }
+
+            // Function to make nodes draggable
             function makeNodeDraggable(node) {
                 let offsetX, offsetY;
 
@@ -172,8 +356,21 @@
                     node.style.top = `${e.clientY - offsetY}px`;
                 }
             }
+
+            // Save button in the modal
+            saveBtn.addEventListener('click', () => {
+                if (currentNode) {
+                    currentNode.innerText = modalTextarea.value; // Save the modal text into the node
+                }
+                modal.style.display = 'none'; // Close the modal
+            });
+
+            // Close button in the modal
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+
         });
     </script>
-
 </body>
 </html>
