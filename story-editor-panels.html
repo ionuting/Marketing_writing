@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindmap Sticky Notes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        #mindmap-container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        #title-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        #description-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            height: 60px; /* În?l?imea câmpului de descriere */
+        }
+
+        #mindmap {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .node {
+            position: absolute;
+            padding: 30px; /* Dimensiunea butoanelor este m?rit? */
+            width: 200px; /* L??imea butoanelor este m?rit? */
+            height: 150px; /* În?l?imea butoanelor este m?rit? */
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            cursor: move;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* Stiluri pentru culorile sticky notes, palide */
+        .node-1 { background-color: rgba(255, 235, 59, 0.6); } /* Galben pal */
+        .node-2 { background-color: rgba(255, 87, 34, 0.6); } /* Portocaliu pal */
+        .node-3 { background-color: rgba(76, 175, 80, 0.6); } /* Verde pal */
+        .node-4 { background-color: rgba(33, 150, 243, 0.6); } /* Albastru pal */
+        .node-5 { background-color: rgba(156, 39, 176, 0.6); } /* Violet pal */
+        .node-6 { background-color: rgba(255, 193, 7, 0.6); } /* Galben deschis pal */
+        .node-7 { background-color: rgba(63, 81, 181, 0.6); } /* Albastru închis pal */
+        .node-8 { background-color: rgba(0, 150, 136, 0.6); } /* Turcoaz pal */
+
+        #clear-btn, #export-btn {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #clear-btn:hover, #export-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="mindmap-container">
+        <h2>Cercul Povestii lui Dan Harmon</h2>
+        <input type="text" id="title-input" placeholder="Introduceti titlul" />
+        <textarea id="description-input" placeholder="Introduceti descrierea"></textarea>
+        <br>
+        <button id="clear-btn">Clear Mindmap</button>
+        <button id="export-btn">Export to Text</button>
+        <div id="mindmap">
+            <!-- Nodurile sticky notes vor fi ad?ugate aici -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const mindmap = document.getElementById('mindmap');
+            const clearBtn = document.getElementById('clear-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const chapters = [
+                "1. The Setup",
+                "2. The Catalyst",
+                "3. The Debate",
+                "4. The Break into Two",
+                "5. The B Story",
+                "6. The Fun and Games",
+                "7. The Midpoint",
+                "8. The Break into Three"
+            ];
+
+            const colors = [
+                'node-1', 'node-2', 'node-3', 
+                'node-4', 'node-5', 'node-6', 
+                'node-7', 'node-8'
+            ];
+
+            // Adaug? noduri sticky notes
+            chapters.forEach((title, index) => {
+                const node = document.createElement('div');
+                node.className = `node ${colors[index]}`;
+                node.style.top = `${Math.floor(index / 4) * 180 + 20}px`; // A?ezare pe dou? rânduri
+                node.style.left = `${(index % 4) * 220 + 20}px`; // A?ezare pe dou? rânduri
+                node.contentEditable = true;
+                node.innerText = title;
+                mindmap.appendChild(node);
+                makeNodeDraggable(node);
+            });
+
+            // Cur??? mindmap-ul
+            clearBtn.addEventListener('click', () => {
+                mindmap.innerHTML = '';
+            });
+
+            // Export? con?inutul nodurilor într-un fi?ier text
+            exportBtn.addEventListener('click', () => {
+                let textContent = '';
+                const nodes = document.querySelectorAll('.node');
+                nodes.forEach(node => {
+                    textContent += `***\n${node.innerText}\n\n`;
+                });
+                downloadTextFile(textContent, 'Capitole_Cercul_Povestii.txt');
+            });
+
+            // Func?ie pentru a desc?rca un fi?ier text
+            function downloadTextFile(text, filename) {
+                const blob = new Blob([text], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                link.click();
+            }
+
+            // Func?ie pentru a face nodurile draggable
+            function makeNodeDraggable(node) {
+                let offsetX, offsetY;
+
+                node.addEventListener('mousedown', (e) => {
+                    offsetX = e.clientX - node.offsetLeft;
+                    offsetY = e.clientY - node.offsetTop;
+                    document.addEventListener('mousemove', moveNode);
+                });
+
+                document.addEventListener('mouseup', () => {
+                    document.removeEventListener('mousemove', moveNode);
+                });
+
+                function moveNode(e) {
+                    node.style.left = `${e.clientX - offsetX}px`;
+                    node.style.top = `${e.clientY - offsetY}px`;
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
