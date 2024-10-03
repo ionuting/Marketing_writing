@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Story Chapter Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #story-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            width: 80%;
+            padding: 10px;
+        }
+        #buttons-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+        .chapter-button {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            color: #333;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .chapter-button .description {
+            font-size: 10px;
+            margin-top: 5px;
+            text-align: center;
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .editor, .preview {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        .editor textarea, .editor input {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        .editor textarea {
+            height: calc(100% - 180px);
+        }
+        .editor button, #save-story, #preview-story {
+            padding: 10px 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        #save-story, #preview-story {
+            position: fixed;
+            bottom: 20px;
+        }
+        #save-story {
+            right: 20px;
+        }
+        #preview-story {
+            right: 180px;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: #333;
+        }
+        #file-upload {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="file-upload" accept=".txt">
+    <input type="text" id="story-title" placeholder="Story Title">
+    <div id="buttons-container"></div>
+    <div id="editor" class="editor">
+        <h2 id="editor-title">Chapter Editor</h2>
+        <input type="text" id="editor-chapter-title" placeholder="Chapter Title">
+        <input type="text" id="editor-description" placeholder="Short Description">
+        <textarea id="editor-content"></textarea>
+        <button onclick="saveChapter()">Save</button>
+        <button class="close-btn" onclick="closeEditor()">&times;</button>
+    </div>
+    <div id="preview" class="preview">
+        <h2>Story Preview</h2>
+        <div id="preview-content"></div>
+        <button class="close-btn" onclick="closePreview()">&times;</button>
+    </div>
+    <button id="preview-story" onclick="previewStory()">Preview Story</button>
+    <button id="save-story" onclick="saveStory()">Save Story</button>
+
+    <script>
+        let chapters = [
+            { id: 1, title: "Chapter 1", content: "", description: "Description 1", color: "#FFC3A0" },
+            { id: 2, title: "Chapter 2", content: "", description: "Description 2", color: "#FFAFCC" },
+            { id: 3, title: "Chapter 3", content: "", description: "Description 3", color: "#BDE0FE" },
+            { id: 4, title: "Chapter 4", content: "", description: "Description 4", color: "#A0C4FF" },
+            { id: 5, title: "Chapter 5", content: "", description: "Description 5", color: "#9BF6FF" },
+            { id: 6, title: "Chapter 6", content: "", description: "Description 6", color: "#CAFFBF" },
+            { id: 7, title: "Chapter 7", content: "", description: "Description 7", color: "#FDFFB6" },
+            { id: 8, title: "Chapter 8", content: "", description: "Description 8", color: "#FFD6A5" },
+            { id: 9, title: "Chapter 9", content: "", description: "Description 9", color: "#FFC6FF" },
+            { id: 10, title: "Chapter 10", content: "", description: "Description 10", color: "#E7C6FF" }
+        ];
+
+        function createButtons() {
+            const container = document.getElementById('buttons-container');
+            const centerX = 250;
+            const centerY = 250;
+            const radius = 200;
+
+            chapters.forEach((chapter, index) => {
+                const button = document.createElement('button');
+                button.className = 'chapter-button';
+                button.innerHTML = `
+                    ${index + 1}
+                    <div class="description" contenteditable="true">${chapter.description}</div>
+                `;
+                const angle = (index / chapters.length) * 2 * Math.PI - Math.PI/2;
+                const x = centerX + radius * Math.cos(angle) - 40;
+                const y = centerY + radius * Math.sin(angle) - 40;
+                
+                button.style.left = `${x}px`;
+                button.style.top = `${y}px`;
+                button.style.backgroundColor = chapter.color;
+                button.onclick = (e) => {
+                    if (e.target === button) {
+                        openEditor(index + 1);
+                    }
+                };
+                container.appendChild(button);
+            });
+        }
+
+        function openEditor(chapterId) {
+            const chapter = chapters[chapterId - 1];
+            document.getElementById('editor-title').textContent = `Editor ${chapter.title}`;
+            document.getElementById('editor-chapter-title').value = chapter.title;
+            document.getElementById('editor-description').value = chapter.description;
+            document.getElementById('editor-content').value = chapter.content;
+            document.getElementById('editor').style.display = 'block';
+            document.getElementById('editor-content').dataset.chapterId = chapterId;
+        }
+
+        function saveChapter() {
+            const chapterId = parseInt(document.getElementById('editor-content').dataset.chapterId);
+            const chapter = chapters[chapterId - 1];
+            chapter.title = document.getElementById('editor-chapter-title').value;
+            chapter.content = document.getElementById('editor-content').value;
+            chapter.description = document.getElementById('editor-description').value;
+            document.querySelector(`.chapter-button:nth-child(${chapterId}) .description`).textContent = chapter.description;
+            alert('Chapter saved!');
+            closeEditor();
+        }
+
+        function closeEditor() {
+            document.getElementById('editor').style.display = 'none';
+        }
+
+        function previewStory() {
+            let preview = `<h1>${document.getElementById('story-title').value || 'Untitled Story'}</h1>`;
+            chapters.forEach((chapter, index) => {
+                preview += `<h3>${chapter.title}</h3>`;
+                preview += `<p>${chapter.content}</p>`;
+            });
+            document.getElementById('preview-content').innerHTML = preview;
+            document.getElementById('preview').style.display = 'block';
+        }
+
+        function closePreview() {
+            document.getElementById('preview').style.display = 'none';
+        }
+
+        function saveStory() {
+            let story = `${document.getElementById('story-title').value || 'Untitled Story'}\n\n`;
+            chapters.forEach((chapter, index) => {
+                story += `***\n${chapter.title}\n\n`;
+                story += `${chapter.content}\n\n`;
+            });
+
+            const blob = new Blob([story], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "story.txt";
+            link.click();
+        }
+
+        // Add functionality for loading story from file
+        document.getElementById('file-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    processUploadedStory(content);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Function to process the uploaded story and parse title, chapters, and content
+        function processUploadedStory(content) {
+            const lines = content.split('\n');
+            let storyTitle = lines.shift().trim(); // First line is the story title
+            document.getElementById('story-title').value = storyTitle;
+
+            let currentChapterIndex = -1;
+            let currentChapterContent = '';
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                // Check if the line is a chapter title
+                const chapterMatch = line.match(/^Chapter (\d+)/);
+                if (chapterMatch) {
+                    if (currentChapterIndex >= 0) {
+                        chapters[currentChapterIndex].content = currentChapterContent.trim();
+                    }
+                    currentChapterIndex = parseInt(chapterMatch[1]) - 1; // Get the chapter number (0-indexed)
+                    currentChapterContent = ''; // Reset the chapter content
+                    chapters[currentChapterIndex].title = line; // Set the chapter title
+                } else {
+                    // Append the line to the current chapter content
+                    currentChapterContent += line + '\n';
+                }
+            });
+
+            // Save the content of the last chapter
+            if (currentChapterIndex >= 0) {
+                chapters[currentChapterIndex].content = currentChapterContent.trim();
+            }
+
+            // Update descriptions on buttons
+            updateChapterButtons();
+
+            alert('Story loaded successfully!');
+        }
+
+        function updateChapterButtons() {
+            const buttons = document.querySelectorAll('.chapter-button');
+            buttons.forEach((button, index) => {
+                const descriptionElement = button.querySelector('.description');
+                descriptionElement.textContent = chapters[index].description;
+            });
+        }
+
+        createButtons();
+
+        // Save edited descriptions directly on buttons
+        document.addEventListener('focusout', function(e) {
+            if (e.target.classList.contains('description')) {
+                const button = e.target.closest('.chapter-button');
+                const chapterId = Array.from(button.parentNode.children).indexOf(button);
+                chapters[chapterId].description = e.target.textContent;
+            }
+        });
+    </script>
+</body>
+</html>
